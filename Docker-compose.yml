@@ -1,0 +1,11 @@
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: Shahil@1999
+    ports:
+      - "3307:3306"  # Map host port 3307 to container port 3306
+  app:
+    image: backend-poc
+    ports:
+      - "5000:5000"  # Map host port 5000 to container port 5000
