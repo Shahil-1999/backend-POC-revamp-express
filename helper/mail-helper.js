@@ -1,8 +1,8 @@
-const nodemailer = require("nodemailer")
-async function sendMail(email, token) {
+const nodemailer = require("nodemailer");
+async function sendMail(id, name, email, token) {
   try {
     console.log(email, token);
-    
+
     const mailTransporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -17,8 +17,8 @@ async function sendMail(email, token) {
     const mailOptions = {
       from: process.env.USER_EMAIL,
       to: email,
-      subject: `Password Reset`,
-      html: `<h1> Password Reset: </h1> <span> please reset your password <a href= "http://localhost:3000/reset_password?token=${token}"> Reset Your Passsword </a>`,
+      subject: `Hi ${name} Password Reset`,
+      html: `<h1> Password Reset: </h1> <span> please reset your password <a href= "http://localhost:3000/reset_password/${id}/${token}"> Reset Your Passsword </a>`,
     };
     mailTransporter.sendMail(mailOptions, (err, info) => {
       if (err) {
@@ -37,5 +37,5 @@ async function sendMail(email, token) {
 }
 
 module.exports = {
-    sendMail
-}
+  sendMail,
+};
