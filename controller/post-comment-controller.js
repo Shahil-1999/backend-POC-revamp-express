@@ -3,7 +3,6 @@ const {
   Posts,
   Comments,
 } = require("../models/index");
-const nodemailer = require("nodemailer")
 require('dotenv').config()
 
 async function addCommentsOnAnyPost(req, res) {
@@ -386,43 +385,6 @@ async function deleteOwnCommentsInAnyPost(req, res) {
     });
   }
 }
-
-
-async function sendMail(userName, email, token) {
-    try {
-        const mailTransporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            requireTLS: true,
-            auth: {
-                user: process.env.USER_EMAIL,
-                pass: process.env.USER_EMAIL_PASSWORD
-            }
-        })
-
-        const mailOptions = {
-            from: process.env.USER_EMAIL,
-            to: email,
-            subject: `Password Reset`,
-            html: `<h1> Password Reset: </h1> <span> please reset your password <a href= "http://localhost:3000/reset_password?token=${token}"> Reset Your Passsword </a>`
-
-        }
-        mailTransporter.sendMail(mailOptions, ((err, info) => {
-            if (err) {
-                console.log("Error", err);
-            } else {
-                console.log(`Mail has been sent ${info.response}`);
-            }
-        }))
-    } catch (error) {
-        console.log(error);
-    }
-
-}
-
-
-
 
 
 module.exports = {

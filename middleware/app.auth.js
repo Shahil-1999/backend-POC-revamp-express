@@ -10,7 +10,10 @@ function authMiddleware(requiredRoles = null) {
             }
 
             const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
             const { isValid, credentials } = await JWTvalidate(decoded);
+            // console.log(isValid);
+            
 
             if (!isValid) {
                 return res.status(401).json({ status: false, message: 'Invalid token or user not found' });

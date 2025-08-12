@@ -10,6 +10,7 @@ const JWTvalidate = async function (decode) {
             }
         });
 
+
         if (!user) {
             return { isValid: false };
         }
@@ -18,6 +19,7 @@ const JWTvalidate = async function (decode) {
             isValid: true, 
             credentials: { 
                 id: user.id, 
+                user: user.user_email,
                 scope: user.role  // role attached for middleware
             } 
         };

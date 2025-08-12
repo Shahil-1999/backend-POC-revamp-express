@@ -7,6 +7,7 @@ const {
   Comments,
   Files,
 } = require("../models/index");
+const { sendMail } = require("../helper/mail-helper");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
@@ -64,6 +65,7 @@ async function userLogin(req, res) {
     const { password } = req.body;
     const isUserExist = await commonFunction.isUserExist(req);
 
+
     if (!isUserExist) {
       return res.json({
         status: false,
@@ -90,6 +92,7 @@ async function userLogin(req, res) {
         }
         // === Subscription check ends here ===
 
+        
         const token = jwt.sign(
           {
             id: isUserExist.id,
@@ -132,7 +135,7 @@ async function userLogin(req, res) {
 async function getUserById(req, res) {
   try {
     const { id } = req.params;
-    const credentials= req.auth;
+    const credentials = req.auth;
 
     if (credentials.id !== +id) {
       return res.json({
@@ -174,7 +177,6 @@ async function getAllUser(req, res) {
   try {
     const { id } = req.params;
     const credentials = req.auth;
-    
 
     if (credentials.id !== +id) {
       return res.json({
@@ -266,16 +268,17 @@ async function deleteAccount(req, res) {
         { is_deleted: true },
         { where: { userDetailsId, is_deleted: false } }
       );
-      await Subscriptions.update({
-        is_deleted: true
-      },{
-        where: {
-          userDetailsId, 
-          is_deleted: false
+      await Subscriptions.update(
+        {
+          is_deleted: true,
+        },
+        {
+          where: {
+            userDetailsId,
+            is_deleted: false,
+          },
         }
-        
-      }
-    )
+      );
 
       return res.json({
         status: true,
@@ -291,10 +294,9 @@ async function deleteAccount(req, res) {
   }
 }
 
-
 async function forgetPassword(req, res) {
   try {
-    const { email } = req.paylaod;
+    const { email } = req.body;
 
     const isUserExist = await UserDetails.findOne({
       where: {
@@ -310,16 +312,17 @@ async function forgetPassword(req, res) {
       });
     } else {
       const randomstring = randomString.generate();
-      await UserDetails.update({
-        where: {
-          email,
-        },
-        data: {
-          token: randomstring,
-        },
-      });
+      await UserDetails.update(
+        { token: randomstring },
+        {
+          where: {
+            email,
+            is_deleted: false
+          },
+        }
+      );
 
-      await sendMail(isUserExist.name, isUserExist.email, randomstring);
+      await sendMail(isUserExist.email, randomstring);
       return res.json({
         status: true,
         msg: "Mail has been sent please check your email",
@@ -337,8 +340,10 @@ async function forgetPassword(req, res) {
 async function resetPassword(req, res) {
   try {
     const credentials = req.auth;
-    const { userDetailsId, token } = req.params;
-    const { password } = req.body;
+    const { userDetailsId } = req.params;
+    let {token} = req.params;
+    let { password } = req.body;
+    
 
     if (credentials.id !== +userDetailsId) {
       return res.json({
@@ -365,16 +370,16 @@ async function resetPassword(req, res) {
     } else {
       password = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
-      await UserDetails.update({
+      await UserDetails.update(
+        {
+          password,
+          token: "",
+        },{
         where: {
           id: userDetailsId,
           is_deleted: false,
         },
-        data: {
-          password,
-          token: "",
-        },
-      });
+      }      );
       return res.json({
         status: true,
         msg: "Password Reset Sucessfully",
