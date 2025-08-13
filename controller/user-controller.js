@@ -322,7 +322,7 @@ async function forgetPassword(req, res) {
         }
       );
 
-      await sendMail(isUserExist.email, randomstring);
+      await sendMail(isUserExist.id, isUserExist.name, isUserExist.email, randomstring);
       return res.json({
         status: true,
         msg: "Mail has been sent please check your email",

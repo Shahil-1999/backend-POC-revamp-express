@@ -32,7 +32,7 @@ async function getProfileImage(req, res) {
 
 async function getProfileImageKey(req, res) {
   try {
-    const credentials  = req.auth;
+    const credentials = req.auth;
 
     const getImageKey = await Files.findOne({
       where: {
@@ -60,7 +60,7 @@ async function getProfileImageKey(req, res) {
 async function uploadProfileImage(req, res) {
   try {
     let { filename } = req.params;
-    const  credentials = req.auth;
+    const credentials = req.auth;
 
     const isUserExist = await UserDetails.findOne({
       where: {
@@ -84,21 +84,23 @@ async function uploadProfileImage(req, res) {
 
     if (isUserExist && !isUserFileExist) {
       savedFile = await Files.create({
-          filename,
-          fileLink, // store full URL in DB
-          user_name: isUserExist.name,
-          userDetailsId: credentials.id,
+        filename,
+        fileLink, // store full URL in DB
+        user_name: isUserExist.name,
+        userDetailsId: credentials.id,
       });
     } else {
-      savedFile = await Files.update({
-        where: {
-          userDetailsId: isUserExist.id, // Use the unique ID
-        },
-        data: {
+      savedFile = await Files.update(
+        {
           filename,
           fileLink,
         },
-      });
+        {
+          where: {
+            userDetailsId: isUserExist.id,
+          },
+        }
+      );
     }
 
     return res.json({
@@ -122,8 +124,6 @@ async function readAllFile(req, res) {
   try {
     const { userDetailsId } = req.params;
     const credentials = req.auth;
-
-    
 
     if (credentials.id !== +userDetailsId) {
       return res.json({
