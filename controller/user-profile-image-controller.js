@@ -1,4 +1,4 @@
-const { getObjectImage, uploadObjectImage } = require("../helper/s3-helper");
+const { getObjectImage, uploadObjectImage, listAllProfileImages } = require("../helper/s3-helper");
 const { UserDetails, Files } = require("../models/index");
 
 async function getProfileImage(req, res) {
@@ -11,6 +11,7 @@ async function getProfileImage(req, res) {
         message: "key is not provided",
       });
     }
+    
 
     const url = await getObjectImage(key);
 
@@ -124,8 +125,8 @@ async function uploadProfileImage(req, res) {
 
 async function readAllFile(req, res) {
   try {
-    const { userDetailsId } = req.params;
     const credentials = req.auth;
+    const { userDetailsId } = req.params;
 
     if (credentials.id !== +userDetailsId) {
       return res.json({
@@ -134,60 +135,84 @@ async function readAllFile(req, res) {
       });
     }
 
-    const isUserExist = await UserDetails.findOne({
-      where: {
-        id: userDetailsId,
-        is_deleted: false,
-      },
-      attributes: ["id"],
+    // Get all active users
+    const users = await UserDetails.findAll({
+      where: { is_deleted: false },
       raw: true,
     });
 
-    if (!isUserExist) {
+    if (users.length === 0) {
       return res.json({
         status: false,
-        msg: "User does not exist",
-        data: {},
+        msg: "No users found",
+        data: [],
       });
     }
 
-    const files = await Files.findAll({
-      where: {
-        is_deleted: false,
-      },
-      attributes: { exclude: ["createdAt", "updatedAt"] },
-      raw: true,
+    // Get all profile images from S3
+    const prefix = "profile-images";
+    const allImages = await listAllProfileImages(prefix);
+
+    // Map images to users (assuming key contains userId like 'profile-images/1.jpg')
+    const usersWithImages = users.map(user => {
+    const imageObj = allImages.find(img => img.key.includes(`profile-${user.id}`));
+      return {
+        ...user,
+        profileImage: imageObj ? imageObj.url : null,
+      };
     });
 
-    if (files.length === 0) {
-      return res.json({
-        status: false,
-        msg: "File not found",
-      });
-    }
-
-    return res.json({
+    return res.status(200).json({
       status: true,
-      msg: "Files fetched successfully",
-      data: files.map((file) => ({
-        fileName: file.filename,
-        fileData: file.fileData,
-        userDetailsId: file.userDetailsId,
-      })),
+      message: "Users with profile images fetched successfully",
+      data: usersWithImages,
     });
+
   } catch (error) {
-    console.error(error);
-    return res.json({
+    console.error("Error fetching users with images:", error);
+    return res.status(500).json({
       status: false,
-      msg: "An error occurred",
+      message: "Failed to fetch users with profile images",
       error: error.message,
     });
   }
 }
+
+
+// async function readAllUserProfileImages(req, res) {
+//   try {
+//     const credentials = req.auth;
+//     const { userDetailsId } = req.params;
+
+//     if (credentials.id !== +userDetailsId) {
+//       return res.json({
+//         status: false,
+//         msg: "Please Check Your UserDetailsId (token's id and UserDetailsId is mismatched)",
+//       });
+//     }
+
+//     const prefix = "profile-images";
+//     const signedFiles = await listAllProfileImages(prefix);
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Profile images fetched successfully",
+//       data: signedFiles,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching profile images:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Failed to fetch profile images",
+//       error: error.message,
+//     });
+//   }
+// }
 
 module.exports = {
   getProfileImage,
   getProfileImageKey,
   uploadProfileImage,
   readAllFile,
+  // readAllUserProfileImages,
 };

@@ -1,4 +1,4 @@
-const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+const { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command} = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -57,8 +57,43 @@ async function uploadObjectImage(filename, ext) {
   };
 }
 
+async function listAllProfileImages(prefix) {
+  const command = new ListObjectsV2Command({
+    Bucket: process.env.AWSBucket,
+    Prefix: prefix,
+  });
+
+  const response = await s3Client.send(command);
+
+  if (!response.Contents) return [];
+
+  // Filter out the folder placeholder (prefix itself)
+  const filesOnly = response.Contents.filter(item => item.Key !== `${prefix}/`);
+
+  // Mapping each object key to a signed URL
+  const signedFiles = await Promise.all(
+    filesOnly.map(async (item) => {
+      const getCommand = new GetObjectCommand({
+        Bucket: process.env.AWSBucket,
+        Key: item.Key,
+      });
+
+      const signedUrl = await getSignedUrl(s3Client, getCommand);
+
+      return {
+        key: item.Key,
+        url: signedUrl,
+      };
+    })
+  );
+
+  return signedFiles;
+}
+
+
 
 module.exports = {
     getObjectImage,
-    uploadObjectImage
+    uploadObjectImage,
+    listAllProfileImages,
 }
