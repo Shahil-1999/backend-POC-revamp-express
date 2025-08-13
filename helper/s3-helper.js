@@ -1,39 +1,44 @@
-const { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command} = require('@aws-sdk/client-s3')
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+const {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  ListObjectsV2Command,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWSAccessKey,
-        secretAccessKey: process.env.AWSSecretKey
-    }
-})
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWSAccessKey,
+    secretAccessKey: process.env.AWSSecretKey,
+  },
+});
 
 async function getObjectImage(key) {
-  // const key = 
-    const command = new GetObjectCommand({
-        Bucket: process.env.AWSBucket,
-        Key: key
-    })
-    const URL = await getSignedUrl(s3Client, command)
-    return URL
+  // const key =
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWSBucket,
+    Key: key,
+  });
+  const URL = await getSignedUrl(s3Client, command);
+  return URL;
 }
 
 async function uploadObjectImage(filename, ext) {
-
   let contentType;
   switch (ext) {
-    case 'jpg':
-    case 'jpeg':
-      contentType = 'image/jpeg';
+    case "jpg":
+    case "jpeg":
+      contentType = "image/jpeg";
       break;
-    case 'png':
-      contentType = 'image/png';
+    case "png":
+      contentType = "image/png";
       break;
-    case 'gif':
-      contentType = 'image/gif';
+    case "gif":
+      contentType = "image/gif";
       break;
     default:
-      throw new Error('Unsupported file type');
+      throw new Error("Unsupported file type");
   }
 
   // Include folder in S3 Key
@@ -53,7 +58,7 @@ async function uploadObjectImage(filename, ext) {
     uploadUrl,
     filename,
     fileLink,
-    contentType
+    contentType,
   };
 }
 
@@ -68,7 +73,9 @@ async function listAllProfileImages(prefix) {
   if (!response.Contents) return [];
 
   // Filter out the folder placeholder (prefix itself)
-  const filesOnly = response.Contents.filter(item => item.Key !== `${prefix}/`);
+  const filesOnly = response.Contents.filter(
+    (item) => item.Key !== `${prefix}/`
+  );
 
   // Mapping each object key to a signed URL
   const signedFiles = await Promise.all(
@@ -90,10 +97,8 @@ async function listAllProfileImages(prefix) {
   return signedFiles;
 }
 
-
-
 module.exports = {
-    getObjectImage,
-    uploadObjectImage,
-    listAllProfileImages,
-}
+  getObjectImage,
+  uploadObjectImage,
+  listAllProfileImages,
+};

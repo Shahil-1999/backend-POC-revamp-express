@@ -7,7 +7,7 @@ const {
   Comments,
   Files,
 } = require("../models/index");
-const { sendMail } = require("../helper/mail-helper");
+const { sendMailForResetPassword } = require("../helper/mail-helper");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
@@ -322,7 +322,7 @@ async function forgetPassword(req, res) {
         }
       );
 
-      await sendMail(isUserExist.id, isUserExist.name, isUserExist.email, randomstring);
+      await sendMailForResetPassword(isUserExist.id, isUserExist.name, isUserExist.email, randomstring);
       return res.json({
         status: true,
         msg: "Mail has been sent please check your email",

@@ -1,4 +1,5 @@
 const { getObjectImage, uploadObjectImage, listAllProfileImages } = require("../helper/s3-helper");
+const{sendProfileUploadEmail} = require('../helper/mail-helper')
 const { UserDetails, Files } = require("../models/index");
 
 async function getProfileImage(req, res) {
@@ -106,6 +107,9 @@ async function uploadProfileImage(req, res) {
       );
     }
 
+    await sendProfileUploadEmail(isUserExist.email, isUserExist.name);
+
+
     return res.json({
       status: true,
       message: "Upload URL generated and file metadata saved",
@@ -169,45 +173,15 @@ async function readAllFile(req, res) {
     });
 
   } catch (error) {
-    console.error("Error fetching users with images:", error);
-    return res.status(500).json({
+     console.log(error);
+    return res.json({
       status: false,
-      message: "Failed to fetch users with profile images",
-      error: error.message,
+      msg: error,
     });
   }
 }
 
 
-// async function readAllUserProfileImages(req, res) {
-//   try {
-//     const credentials = req.auth;
-//     const { userDetailsId } = req.params;
-
-//     if (credentials.id !== +userDetailsId) {
-//       return res.json({
-//         status: false,
-//         msg: "Please Check Your UserDetailsId (token's id and UserDetailsId is mismatched)",
-//       });
-//     }
-
-//     const prefix = "profile-images";
-//     const signedFiles = await listAllProfileImages(prefix);
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Profile images fetched successfully",
-//       data: signedFiles,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching profile images:", error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Failed to fetch profile images",
-//       error: error.message,
-//     });
-//   }
-// }
 
 module.exports = {
   getProfileImage,
