@@ -9,6 +9,7 @@ const s3Client = new S3Client({
 })
 
 async function getObjectImage(key) {
+  // const key = 
     const command = new GetObjectCommand({
         Bucket: process.env.AWSBucket,
         Key: key
@@ -17,8 +18,7 @@ async function getObjectImage(key) {
     return URL
 }
 
-async function uploadObjectImage(filename) {
-  const ext = filename.split('.').pop().toLowerCase(); 
+async function uploadObjectImage(filename, ext) {
 
   let contentType;
   switch (ext) {
@@ -36,28 +36,27 @@ async function uploadObjectImage(filename) {
       throw new Error('Unsupported file type');
   }
 
+  // Include folder in S3 Key
 
-
-  const fileKey = filename;
-  
   const command = new PutObjectCommand({
     Bucket: process.env.AWSBucket,
-    Key: fileKey,
+    Key: filename,
     ContentType: contentType,
   });
 
   const uploadUrl = await getSignedUrl(s3Client, command);
 
-  // full URL to save in DB
-  const fileLink = `https://${process.env.AWSBucket}.s3.ap-south-1.amazonaws.com/${fileKey}`;
+  // Full URL to save in DB
+  const fileLink = `https://${process.env.AWSBucket}.s3.ap-south-1.amazonaws.com/${filename}`;
 
   return {
     uploadUrl,
-    fileKey,
+    filename,
     fileLink,
     contentType
   };
 }
+
 
 module.exports = {
     getObjectImage,

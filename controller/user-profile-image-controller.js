@@ -1,5 +1,5 @@
 const { getObjectImage, uploadObjectImage } = require("../helper/s3-helper");
-const { UserDetails, Posts, Comments, Files } = require("../models/index");
+const { UserDetails, Files } = require("../models/index");
 
 async function getProfileImage(req, res) {
   try {
@@ -39,6 +39,7 @@ async function getProfileImageKey(req, res) {
         userDetailsId: credentials.id,
         is_deleted: false,
       },
+      raw: true
     });
 
     return res.json({
@@ -77,9 +78,10 @@ async function uploadProfileImage(req, res) {
     });
 
     const extension = filename.split(".").pop();
-    filename = `profile-${credentials.id}.${extension}`;
+    const folderName = "profile-images";
+    filename = `${folderName}/profile-${credentials.id}`;
 
-    const { uploadUrl, fileLink } = await uploadObjectImage(filename);
+    const { uploadUrl, fileLink } = await uploadObjectImage(filename, extension);
     let savedFile;
 
     if (isUserExist && !isUserFileExist) {
