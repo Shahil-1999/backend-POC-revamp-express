@@ -15,7 +15,7 @@ router.get('/user_details/:id', authMiddleware(), UserValidation.getUserDetailVa
 router.get('/user_details_admin/:id', authMiddleware(['ADMIN']), UserValidation.getAllUserValidation, UserController.getAllUser)
 router.post('/forget_password', UserValidation.forgetPasswordValidation, UserController.forgetPassword)
 router.delete('/delete_user_acct/:userDetailsId', authMiddleware(), UserValidation.userAccountDeleteValidation, UserController.deleteAccount)
-router.patch('/reset_password/:userDetailsId/:token', authMiddleware(), UserValidation.resetPasswordValidation, UserController.resetPassword)
+router.patch('/reset_password/:userDetailsId/:token', UserValidation.resetPasswordValidation, UserController.resetPassword)
 
 
 module.exports = router;

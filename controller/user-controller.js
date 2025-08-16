@@ -339,18 +339,10 @@ async function forgetPassword(req, res) {
 
 async function resetPassword(req, res) {
   try {
-    const credentials = req.auth;
     const { userDetailsId } = req.params;
     let {token} = req.params;
     let { password } = req.body;
     
-
-    if (credentials.id !== +userDetailsId) {
-      return res.json({
-        status: false,
-        msg: "Unauthorized Access",
-      });
-    }
 
     let tokenVerification = await UserDetails.findOne({
       where: {
