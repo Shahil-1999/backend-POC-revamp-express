@@ -19,7 +19,6 @@ This is a backend proof of concept (POC) built with **Express.js**, **Sequelize*
 - 🔐 JWT-based authentication
 - 📦 Sequelize ORM with MySQL
 - ☁️ AWS S3 for secure file uploads
-- 🧾 Swagger API documentation
 - ✅ ESLint + Husky for code quality
 - 🚫 Soft delete functionality
 - 🧠 Modular folder structure
