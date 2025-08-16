@@ -7,7 +7,7 @@ step 6 - npm start
 
 
 
-# Backend-POC (Hapi.js + sequelize + AWS S3)
+# Backend-POC (Express.js + sequelize + AWS S3)
 
 This is a backend proof of concept (POC) built with **Hapi.js**, **Sequelize**, **MySQL**, and **AWS S3** for file handling. The project is structured to support scalable development, clean API architecture, secure user authentication, and file upload functionality.
 
