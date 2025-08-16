@@ -9,7 +9,7 @@ step 6 - npm start
 
 # Backend-POC (Express.js + sequelize + AWS S3)
 
-This is a backend proof of concept (POC) built with **Express.js**, **Sequelize**, **MySQL**, and **AWS S3** for file handling. The project is structured to support scalable development, clean API architecture, secure user authentication, and file upload functionality.
+This is a backend proof of concept (POC) built with **Express.js**, **Sequelize**, **MySQL**, and **AWS S3** for file handling. The project is structured to support scalable development, clean API architecture, secure user authentication, role based authorization and file upload functionality.
 
 ---
 
@@ -17,6 +17,7 @@ This is a backend proof of concept (POC) built with **Express.js**, **Sequelize*
 
 - ⚙️ **Express.js** server framework
 - 🔐 JWT-based authentication
+-     Role Based Authorization
 - 📦 Sequelize ORM with MySQL
 - ☁️ AWS S3 for secure file uploads
 - ✅ ESLint + Husky for code quality
