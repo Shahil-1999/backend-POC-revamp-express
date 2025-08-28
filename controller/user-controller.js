@@ -12,6 +12,24 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const randomString = require("randomstring");
+const { callAgent } = require("../helper/openai");
+
+async function askAgent (req, res){
+  try {
+    const { prompt } = req.body;   
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    const result = await callAgent(prompt);
+
+    return res.json({ success: true, response: result });
+  } catch (error) {
+    console.error("Agent API error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
 
 async function addUser(req, res) {
   try {
@@ -394,4 +412,5 @@ module.exports = {
   deleteAccount,
   forgetPassword,
   resetPassword,
+  askAgent,
 };
