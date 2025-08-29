@@ -1,4 +1,5 @@
 const { UserDetails, Posts, Comments } = require("../models/index");
+const { callAgent } = require("../helper/openai");
 
 async function addPost(req, res) {
   try {

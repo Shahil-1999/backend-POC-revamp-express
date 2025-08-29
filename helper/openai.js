@@ -1,5 +1,11 @@
 const OpenAI = require("openai");
-const { UserDetails, Posts, Comments, Files, Subscriptions } = require("../models/index");
+const {
+  UserDetails,
+  Posts,
+  Comments,
+  Files,
+  Subscriptions,
+} = require("../models/index");
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -112,8 +118,32 @@ async function getUsersSubscription() {
   }
 }
 
+async function addUserPost({ userDetailsId, title, post_description }) {
+  const user = await UserDetails.findOne({
+    where: { id: userDetailsId, is_deleted: false },
+    raw: true,
+  });
+  if (!user) return { error: "User does not exist" };
+
+  const post = await Posts.create({
+    title,
+    post_description,
+    user_name: user.name,
+    userDetailsId,
+  });
+
+  return { success: true, post };
+}
+
 // Define tools
-const tools = { getUsers, getUsersImage, getUsersPost, getUsersPostcomments, getUsersSubscription };
+const tools = {
+  getUsers,
+  getUsersImage,
+  getUsersPost,
+  getUsersPostcomments,
+  getUsersSubscription,
+  addUserPost,
+};
 const toolSchemas = [
   {
     type: "function",
@@ -151,7 +181,7 @@ const toolSchemas = [
       parameters: { type: "object", properties: {} },
     },
   },
-    {
+  {
     type: "function",
     function: {
       name: "getUsersSubscription",
@@ -160,20 +190,41 @@ const toolSchemas = [
       parameters: { type: "object", properties: {} },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "addUserPost",
+      description: "Add a post for a user with title and description",
+      parameters: {
+        type: "object",
+        properties: {
+          userDetailsId: { type: "integer" },
+          title: { type: "string" },
+          post_description: { type: "string" },
+        },
+        required: ["userDetailsId", "title", "post_description"],
+      },
+    },
+  },
 ];
 
 async function callAgent(userPrompt) {
-  const messages = [
-    {
-      role: "system",
-      content: `You are Josh, a helpful assistant. 
-- If the user asks for details (like name, email, role, posts, subscription, etc.), call the right tool. 
-- Never reply with "I don't know" if the data is available in the tool results. And give result only they ask not more than that`,
-    },
-    { role: "user", content: userPrompt },
-  ];
+const messages = [
+  {
+    role: "system",
+    content: `You are Josh, a helpful assistant. 
+- Always return **plain text sentences in one paragraph**, no Markdown, no line breaks (\n), no bullets.
+- If the user asks for details (like name, email, role, posts, subscription, etc.), call the right tool and return a plain sentence.
+- If the user asks something not related to tools, answer normally in plain text.
+- Never reply with "I don't know" if data is available.
+- Only return what the user asks for, nothing extra.`,
+  },
+  { role: "user", content: userPrompt },
+];
 
-  while (true) {
+
+  const MAX_ITERATIONS = 5; // safety limit
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages,
@@ -184,33 +235,44 @@ async function callAgent(userPrompt) {
     const toolCalls = response.tool_calls;
 
     if (!toolCalls) {
-      return response.content; // Final AI response
+      return response.content || "No response generated.";
     }
 
-    //  push assistant response ONCE
+    // Push AI request
     messages.push(response);
 
-    for (const tool of toolCalls) {
-      const funcName = tool.function.name;
-      const funcArgs = tool.function.arguments
-        ? JSON.parse(tool.function.arguments)
-        : {};
+    // Process tool calls in parallel with map + Promise.all
+    await Promise.all(
+      toolCalls.map(async (tool) => {
+        const funcName = tool.function.name;
+        let funcArgs = {};
+        try {
+          funcArgs = tool.function.arguments
+            ? JSON.parse(tool.function.arguments)
+            : {};
+        } catch {
+          console.warn(`Failed to parse arguments for ${funcName}`);
+        }
 
-      if (tools[funcName]) {
-        const result = await tools[funcName](funcArgs);
+        let result;
 
-        // respond to THIS specific tool_call_id
+        if (tools[funcName]) {
+          result = await tools[funcName](funcArgs);
+        } else {
+          console.warn(`Unknown tool requested: ${funcName}`);
+          result = { error: "Unknown tool" };
+        }
+
         messages.push({
           role: "tool",
           tool_call_id: tool.id,
           content: JSON.stringify(result),
         });
-      } else {
-        console.warn(`Unknown tool requested: ${funcName}`);
-      }
-    }
+      })
+    );
   }
-}
 
+  return "Sorry, I couldn't complete your request after multiple attempts.";
+}
 
 module.exports = { callAgent };
