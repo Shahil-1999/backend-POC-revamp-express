@@ -78,6 +78,18 @@ const getAllUserValidation = validate(
   "params"
 );
 
+// Renew Subscription
+const renewSubscriptionValidation = validate(
+  Joi.object({
+    email: Joi.string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .required()
+      .label("email"),
+    secretSubscriptionCode: Joi.string().required().label("secretSubscriptionCode"),
+  }),
+  "body"
+);
+
 module.exports = {
   getUserDetailValidation,
   userAddValidation,
@@ -86,4 +98,5 @@ module.exports = {
   resetPasswordValidation,
   forgetPasswordValidation,
   getAllUserValidation,
+  renewSubscriptionValidation,
 };

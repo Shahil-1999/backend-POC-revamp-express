@@ -83,64 +83,80 @@ async function userLogin(req, res) {
     const { password } = req.body;
     const isUserExist = await commonFunction.isUserExist(req);
 
-
     if (!isUserExist) {
       return res.json({
         status: false,
-        msg: "user dosent exist",
+        msg: "User doesn't exist",
       });
-    } else {
-      const hashPassword = isUserExist.password;
-      if (bcrypt.compareSync(password, hashPassword)) {
-        // === Subscription check implementation starts here ===
-        const subscription = await Subscriptions.findOne({
-          where: {
-            userDetailsId: isUserExist.id,
-            status: "active",
-          },
-          raw: true,
-        });
-
-        if (!subscription || new Date() > new Date(subscription.endDate)) {
-          return res.json({
-            status: false,
-            status_code: 400,
-            message: "Your subscription has expired. Please renew to continue.",
-          });
-        }
-        // === Subscription check ends here ===
-
-        
-        const token = jwt.sign(
-          {
-            id: isUserExist.id,
-            user_email: isUserExist.email,
-            scope: isUserExist.role,
-          },
-          SECRET_KEY,
-          {
-            expiresIn: "1D",
-          }
-        );
-        return res.json({
-          status: true,
-          message: "User logged in and token generated Sucessfully",
-          data: {
-            userName: isUserExist.name,
-            token,
-            userDetailsId: isUserExist.id,
-            role: isUserExist.role,
-            subscription_status: subscription.status,
-            subscription_endDate: subscription.endDate,
-          },
-        });
-      } else {
-        return res.json({
-          status: false,
-          message: "Password not matched",
-        });
-      }
     }
+
+    const hashPassword = isUserExist.password;
+    if (!bcrypt.compareSync(password, hashPassword)) {
+      return res.json({
+        status: false,
+        message: "Password not matched",
+      });
+    }
+
+    // === Subscription check implementation starts here ===
+    const subscription = await Subscriptions.findOne({
+      where: {
+        userDetailsId: isUserExist.id,
+        status: "active",
+      },
+      raw: true,
+    });
+
+    if (!subscription) {
+      return res.json({
+        status: false,
+        status_code: 400,
+        message: "No active subscription found. Please subscribe to continue.",
+      });
+    }
+
+    // Check expiry
+    if (new Date() > new Date(subscription.endDate)) {
+      // Immediately deactivate expired subscription
+      await Subscriptions.update(
+        { status: "inactive" },
+        { where: { id: subscription.id } }
+      );
+
+      return res.json({
+        status: false,
+        status_code: 400,
+        message: "Your subscription has expired. Please renew to continue.",
+      });
+    }
+    // === Subscription check ends here ===
+
+    // Generate token if everything is good
+    const token = jwt.sign(
+      {
+        id: isUserExist.id,
+        user_email: isUserExist.email,
+        scope: isUserExist.role,
+      },
+      SECRET_KEY,
+      {
+        expiresIn: "1d", // 1 day
+      }
+    );
+
+    return res.json({
+      status: true,
+      message: "User logged in and token generated successfully",
+      data: {
+        userName: isUserExist.name,
+        token,
+        userDetailsId: isUserExist.id,
+        role: isUserExist.role,
+        subscription_status: subscription.status,
+        subscription_endDate: subscription.endDate,
+      },
+    });
+
   } catch (error) {
     console.log(error);
     return res.json({
@@ -404,6 +420,82 @@ async function resetPassword(req, res) {
   }
 }
 
+async function subscriptionRenew(req, res) {
+  const {email, secretSubscriptionCode} = req.body
+  try {
+
+    const isUserExist = await UserDetails.findOne({
+      where: {
+        email,
+        is_deleted: false
+      },
+      attributes: ['id', 'email'],
+      raw: true
+    })
+      if (!isUserExist) {
+      return res.json({
+        status: false,
+        msg: "user dosent exist",
+      });
+    } else {
+        // === Subscription renew implementation starts here ===
+        const isSubscriptionInactive = await Subscriptions.findOne({
+          where: {
+            userDetailsId: isUserExist.id,
+            status: "inactive",
+          },
+          attributes:['id', 'startdate', 'endDate', 'status'],
+          raw: true,
+        });
+          if (!isSubscriptionInactive) {
+            return res.json({
+              status: false,
+              message: "No inactive subscription found for this user.",
+            });
+          }
+        // === Subscription check ends here ===
+
+        // === Subscription Renew starts here ===
+        const code = process.env.SUBSCRIPTION_RENEW_CODE        
+        const newEndDate = moment().add(1, "days").toISOString("YYYY-MM-DDTHH:mm:ss");
+
+        if(secretSubscriptionCode !== code) {
+          return res.json({
+          status: false,
+          status_code: 400,
+          message: "Please provide valid code to renew the subscription.",
+          });
+        }
+        await Subscriptions.update(
+          {
+            status: 'active',
+            endDate: newEndDate
+          },{
+            where: {
+              userDetailsId: isUserExist.id,
+              status: "inactive",
+            }
+          }
+        )
+        return res.json({
+          status: true,
+          message: "Subscription renewed successfully",
+          data: {
+            userName: isUserExist.name,
+            subscription_status: 'active',
+            subscription_endDate: newEndDate,
+          },
+    });
+      }
+  } catch (error){
+     console.log(error);
+    return res.json({
+      status: false,
+      msg: error,
+    });
+  }
+}
+
 module.exports = {
   addUser,
   userLogin,
@@ -413,4 +505,5 @@ module.exports = {
   forgetPassword,
   resetPassword,
   askAgent,
+  subscriptionRenew,
 };

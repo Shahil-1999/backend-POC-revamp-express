@@ -17,6 +17,6 @@ router.post('/forget_password', UserValidation.forgetPasswordValidation, UserCon
 router.delete('/delete_user_acct/:userDetailsId', authMiddleware(), UserValidation.userAccountDeleteValidation, UserController.deleteAccount)
 router.patch('/reset_password/:userDetailsId/:token', UserValidation.resetPasswordValidation, UserController.resetPassword)
 router.post("/agent", UserController.askAgent);
-
+router.post('/renew-subscription', UserValidation.renewSubscriptionValidation, UserController.subscriptionRenew)
 
 module.exports = router;
