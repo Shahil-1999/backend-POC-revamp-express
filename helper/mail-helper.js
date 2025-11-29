@@ -55,7 +55,27 @@ async function sendProfileUploadEmail(toEmail, userName) {
   }
 }
 
+// Send profile image delete notification email
+async function sendProfileImageDeleteEmail(toEmail, userName) {
+  try {
+    const mailOptions = {
+      from: process.env.USER_EMAIL,
+      to: toEmail,
+      subject: "Profile Image Deleted",
+      text: `Hi ${userName}, your profile image has been successfully deleted.`,
+      html: `<p>Hi <b>${userName}</b>, your profile image has been successfully deleted.</p>`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { status: true, info };
+  } catch (error) {
+    console.error("Error sending profile upload email:", error);
+    return { status: false, error };
+  }
+}
+
 module.exports = {
   sendMailForResetPassword,
   sendProfileUploadEmail,
+  sendProfileImageDeleteEmail,
 };

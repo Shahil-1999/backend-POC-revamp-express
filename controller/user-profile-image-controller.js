@@ -1,5 +1,5 @@
 const { getObjectImage, uploadObjectImage, listAllProfileImages, deleteObjectImage } = require("../helper/s3-helper");
-const{sendProfileUploadEmail} = require('../helper/mail-helper')
+const{sendProfileUploadEmail, sendProfileImageDeleteEmail} = require('../helper/mail-helper')
 const { UserDetails, Files } = require("../models/index");
 const { where } = require("sequelize");
 
@@ -148,14 +148,16 @@ async function deleteProfileImage(req, res) {
       attributes: ['id', 'filename', 'is_deleted'],
     });
 
-    await deleteObjectImage(isUserFileExist.filename);
-
     if (!isUserFileExist) {
       return res.json({
       status: true,
       message: "File not found",
     });
     } 
+
+    await deleteObjectImage(isUserFileExist.filename);
+
+
     savedFile = await Files.update({
       is_deleted: true,
       },
@@ -164,6 +166,8 @@ async function deleteProfileImage(req, res) {
         id: isUserFileExist.id,
       }
     });
+
+    await sendProfileImageDeleteEmail(isUserExist.email, isUserExist.name);
 
     return res.json({
       status: true,
