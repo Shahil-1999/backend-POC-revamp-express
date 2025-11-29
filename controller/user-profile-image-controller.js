@@ -1,6 +1,7 @@
-const { getObjectImage, uploadObjectImage, listAllProfileImages } = require("../helper/s3-helper");
+const { getObjectImage, uploadObjectImage, listAllProfileImages, deleteObjectImage } = require("../helper/s3-helper");
 const{sendProfileUploadEmail} = require('../helper/mail-helper')
 const { UserDetails, Files } = require("../models/index");
+const { where } = require("sequelize");
 
 async function getProfileImage(req, res) {
   try {
@@ -127,6 +128,56 @@ async function uploadProfileImage(req, res) {
   }
 }
 
+async function deleteProfileImage(req, res) {
+  try {
+    const credentials = req.auth;
+
+    const isUserExist = await UserDetails.findOne({
+      where: {
+        id: credentials.id,
+        is_deleted: false,
+      },
+    });
+
+
+    const isUserFileExist = await Files.findOne({
+      where: {
+        userDetailsId: credentials.id,
+        is_deleted: false,
+      },
+      attributes: ['id', 'filename', 'is_deleted'],
+    });
+
+    await deleteObjectImage(isUserFileExist.filename);
+
+    if (!isUserFileExist) {
+      return res.json({
+      status: true,
+      message: "File not found",
+    });
+    } 
+    savedFile = await Files.update({
+      is_deleted: true,
+      },
+      {
+      where: {
+        id: isUserFileExist.id,
+      }
+    });
+
+    return res.json({
+      status: true,
+      message: "Profile image deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: false,
+      msg: error,
+    });
+  }
+}
+
 async function readAllFile(req, res) {
   try {
     const credentials = req.auth;
@@ -188,5 +239,6 @@ module.exports = {
   getProfileImageKey,
   uploadProfileImage,
   readAllFile,
+  deleteProfileImage,
   // readAllUserProfileImages,
 };

@@ -3,6 +3,7 @@ const {
   GetObjectCommand,
   PutObjectCommand,
   ListObjectsV2Command,
+  DeleteObjectCommand 
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -97,8 +98,23 @@ async function listAllProfileImages(prefix) {
   return signedFiles;
 }
 
+async function deleteObjectImage(filename) {
+ 
+  const command = {
+    Bucket: process.env.AWSBucket,
+    Key: filename, // S3 object key
+  };
+
+  try {
+    const result = await s3Client.send(new DeleteObjectCommand(command));
+  } catch (err) {
+    console.error("Error deleting image:", err);
+  }
+}
+
 module.exports = {
   getObjectImage,
   uploadObjectImage,
   listAllProfileImages,
+  deleteObjectImage,
 };

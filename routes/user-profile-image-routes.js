@@ -13,5 +13,6 @@ router.post('/profile_img/get', authMiddleware(), UserProfileImageValidations.ge
 router.get('/profile_img/key', authMiddleware(), UserProfileImageController.getProfileImageKey)
 router.post('/upload-url/:filename', authMiddleware(), UserProfileImageValidations.uploadProfileImageValidation, UserProfileImageController.uploadProfileImage)
 router.get('/get_all_profile_image/:userDetailsId', authMiddleware(['ADMIN']), UserProfileImageValidations.getAllImageValidation, UserProfileImageController.readAllFile)
+router.delete('/profile_img/delete', authMiddleware(), UserProfileImageController.deleteProfileImage)
 
 module.exports = router;
