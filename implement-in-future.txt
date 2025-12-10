@@ -1,6 +1,6 @@
 # implement job who continuous check subscription plan. (backend)
 # implement renew subscription. (frontend)
-# implement delete profile image. (frontend)
+# implement delete profile image. (frontend) Done
 # implement upload image on post. (backend and frontend)
 # implement AI Agent. (frontend)
 # implement refresh token and token rotation for security (backend)
