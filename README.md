@@ -23,6 +23,7 @@ This is a backend proof of concept (POC) built with **Express.js**, **Sequelize*
 - ✅ ESLint + Husky for code quality
 - 🚫 Soft delete functionality
 - 🧠 Modular folder structure
+-    Horizontal Scaled using token rotation and rate limitter
 
 ---
 

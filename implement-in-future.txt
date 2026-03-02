@@ -3,5 +3,5 @@
 # implement delete profile image. (frontend) Done
 # implement upload image on post. (backend and frontend)
 # implement AI Agent. (frontend)
-# implement refresh token and token rotation for security (backend)
+# implement refresh token and token rotation for security (backend) (done)
 # implement rate limmiting (backend) (done)
