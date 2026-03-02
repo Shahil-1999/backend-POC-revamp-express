@@ -53,7 +53,7 @@ backend-POC/
 ├── connection/        -- database connection
 ├── constant/          -- constant variables
 ├── controllers/       -- Route handlers
-├── middlewares/       -- Auth & validation
+├── middlewares/       -- Auth & validation & rate-limiter
 ├── models/            -- sequelize model
 ├── routes/            -- Express route definitions
 ├── migration/         -- sequelize migration
