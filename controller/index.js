@@ -1,4 +1,5 @@
 module.exports = {
+    Test: require('./test'),
     PostController : require('./post-controller'),
     UserController: require('./user-controller'),
     UserProfileImageController: require('./user-profile-image-controller'),

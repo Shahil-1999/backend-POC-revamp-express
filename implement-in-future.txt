@@ -4,4 +4,4 @@
 # implement upload image on post. (backend and frontend)
 # implement AI Agent. (frontend)
 # implement refresh token and token rotation for security (backend)
-# implement rate limmiting (backend)
+# implement rate limmiting (backend) (done)
