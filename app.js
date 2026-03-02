@@ -2,6 +2,8 @@ const express = require('express');
 require('dotenv').config();
 const sequelize = require('./connection/db-connection')
 const rateLimiter = require('./middleware/rate-limiter');
+const cookieParser = require('cookie-parser');
+
 
 const cors = require("cors");
 const app = express();
@@ -17,6 +19,8 @@ app.use(express.json());
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const allRoutes = require('./routes/index');
 app.use(rateLimiter);
+app.use(cookieParser());
+
 // Routes (each file defines its own paths)
 app.use(allRoutes);
 

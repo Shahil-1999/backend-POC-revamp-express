@@ -1,4 +1,3 @@
-const SECRET_KEY = process.env.SECRET_KEY;
 const commonFunction = require("../common/app.commonFunction");
 const {
   UserDetails,
@@ -9,10 +8,9 @@ const {
 } = require("../models/index");
 const { sendMailForResetPassword } = require("../helper/mail-helper");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const randomString = require("randomstring");
-const { callAgent } = require("../helper/openai");
+const { callAgent } = require("../helper/openai-helper");
 
 async function askAgent (req, res){
   try {
@@ -78,93 +76,7 @@ async function addUser(req, res) {
   }
 }
 
-async function userLogin(req, res) {
-  try {
-    const { password } = req.body;
-    const isUserExist = await commonFunction.isUserExist(req);
 
-    if (!isUserExist) {
-      return res.json({
-        status: false,
-        msg: "User doesn't exist",
-      });
-    }
-
-    const hashPassword = isUserExist.password;
-    if (!bcrypt.compareSync(password, hashPassword)) {
-      return res.json({
-        status: false,
-        message: "Password not matched",
-      });
-    }
-
-    // === Subscription check implementation starts here ===
-    const subscription = await Subscriptions.findOne({
-      where: {
-        userDetailsId: isUserExist.id,
-        status: "active",
-      },
-      raw: true,
-    });
-
-    if (!subscription) {
-      return res.json({
-        status: false,
-        status_code: 400,
-        message: "No active subscription found. Please subscribe to continue.",
-      });
-    }
-
-    // Check expiry
-    if (new Date() > new Date(subscription.endDate)) {
-      // Immediately deactivate expired subscription
-      await Subscriptions.update(
-        { status: "inactive" },
-        { where: { id: subscription.id } }
-      );
-
-      return res.json({
-        status: false,
-        status_code: 400,
-        message: "Your subscription has expired. Please renew to continue.",
-      });
-    }
-    // === Subscription check ends here ===
-
-    // Generate token if everything is good
-    const token = jwt.sign(
-      {
-        id: isUserExist.id,
-        user_email: isUserExist.email,
-        scope: isUserExist.role,
-      },
-      SECRET_KEY,
-      {
-        expiresIn: "1d", // 1 day
-      }
-    );
-
-    return res.json({
-      status: true,
-      message: "User logged in and token generated successfully",
-      data: {
-        userName: isUserExist.name,
-        token,
-        userDetailsId: isUserExist.id,
-        role: isUserExist.role,
-        subscription_status: subscription.status,
-        subscription_endDate: subscription.endDate,
-      },
-    });
-
-  } catch (error) {
-    console.log(error);
-    return res.json({
-      msg: "error",
-      error,
-    });
-  }
-}
 
 async function getUserById(req, res) {
   try {
@@ -498,7 +410,6 @@ async function subscriptionRenew(req, res) {
 
 module.exports = {
   addUser,
-  userLogin,
   getUserById,
   getAllUser,
   deleteAccount,

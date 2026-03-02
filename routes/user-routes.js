@@ -9,7 +9,6 @@ const {
 
 const authMiddleware = require('../middleware/app.auth')
 
-router.post('/user_login', UserValidation.userLoginValidation, UserController.userLogin)
 router.post('/add_user', UserValidation.userAddValidation, UserController.addUser)
 router.get('/user_details/:id', authMiddleware(), UserValidation.getUserDetailValidation, UserController.getUserById)
 router.get('/user_details_admin/:id', authMiddleware(['ADMIN']), UserValidation.getAllUserValidation, UserController.getAllUser)

@@ -5,5 +5,6 @@ module.exports = {
     Posts: 'posts',
     Comments: 'comments',
     Files: 'files',
-    Subscriptions: 'subscriptions'
+    Subscriptions: 'subscriptions',
+    RefreshTokens: 'refresh_tokens'
 };

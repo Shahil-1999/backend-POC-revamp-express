@@ -3,6 +3,7 @@ const UserDetails = require("./userdetail-model");
 const Comments = require("./comment-model");
 const Files = require("./file-model");
 const Subscriptions = require("./subscription-model");
+const RefreshToken = require("./refresh-token-model");
 
 const models = {
   Posts,
@@ -10,6 +11,7 @@ const models = {
   Comments,
   Files,
   Subscriptions,
+  RefreshToken,
 };
 
 Object.values(models).forEach(model => {

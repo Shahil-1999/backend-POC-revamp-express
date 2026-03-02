@@ -3,5 +3,7 @@ module.exports = {
     PostController : require('./post-controller'),
     UserController: require('./user-controller'),
     UserProfileImageController: require('./user-profile-image-controller'),
-    PostCommentController: require('./post-comment-controller')
+    PostCommentController: require('./post-comment-controller'),
+    AuthController: require('./auth-controller'),
+    RefreshTokenRotationController: require('./refresh-token-rotation-controller'),
 }
