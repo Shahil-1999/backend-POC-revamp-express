@@ -4,6 +4,7 @@ const { hashToken } = require("../helper/refresh-token-helper");
 const bcrypt = require("bcryptjs");
 const tokenService = require("../service/token-service");
 const crypto = require("crypto");
+const redis = require("../config/redis-config");
 
 async function userLogin(req, res) {
   try {
@@ -64,6 +65,14 @@ async function userLogin(req, res) {
       email: isUserExist.email,
       scope: isUserExist.role,
     });
+
+    // After generating accessToken
+    await redis.set(
+      `access:${accessToken}`, // key
+      isUserExist.id,          // value (or anything meaningful)
+      "EX",
+      15 * 60                  // expire in 15 mins
+    );
 
     const tokenId = crypto.randomUUID();
     const refreshToken = tokenService.generateRefreshToken({
@@ -127,10 +136,17 @@ async function userLogout(req, res) {
     }
 
     res.clearCookie("refreshToken");
+
+    //Remove access token from Redis (immediate invalidation)
+    const accessToken = req.accessToken; // from middleware
+    if (accessToken) {
+      await redis.del(`access:${accessToken}`);
+    }
+
     return res.json({
       status: true,
       status_code: 200,
-      message: "Logged out successfully",
+      message: "Logged out successfully and access token invalidated",
     });
   } catch (error) {
     console.log(error);

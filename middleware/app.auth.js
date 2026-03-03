@@ -1,5 +1,7 @@
 const JWTvalidate = require("../helper/auth-helper");
 const { verifyAccessToken } = require("../service/token-service");
+const redis = require("../config/redis-config");
+
 function authMiddleware(requiredRoles = []) {
   return async (req, res, next) => {
     try {
@@ -25,6 +27,16 @@ function authMiddleware(requiredRoles = []) {
         });
       }
 
+      // Check Redis to see if token is revoked / valid
+      const sessionExists = await redis.get(`access:${token}`);
+      
+      if (!sessionExists) {
+        return res.status(401).json({
+          status: false,
+          message: "Access token revoked or invalid"
+        });
+      }
+
       // Validate user from DB
       const { isValid, credentials } = await JWTvalidate(decoded);
 
@@ -44,7 +56,7 @@ function authMiddleware(requiredRoles = []) {
 
       // Attach user to request
       req.auth = credentials;
-
+      req.accessToken = token; // Attach token for potential revocation on logout
       next();
     } catch (error) {
       console.error("Auth middleware error:", error);

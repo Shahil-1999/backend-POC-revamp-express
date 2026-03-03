@@ -2,6 +2,8 @@ const { RefreshToken } = require("../models/index");
 const { hashToken } = require("../helper/refresh-token-helper");
 const tokenService = require("../service/token-service");
 const crypto = require("crypto");
+const redis = require("../config/redis-config"); // Redis instance
+
 
 async function refresh(req, res) {
   try {
@@ -56,6 +58,14 @@ async function refresh(req, res) {
       id: decoded.id,
       scope: decoded.scope,
     });
+
+    // Store access token in Redis for immediate revocation
+    await redis.set(
+      `access:${accessToken}`, // Key
+      decoded.id,             // Value (userId)
+      "EX",
+      15 * 60                 // Expire in 15 minutes
+    );
 
     // Set cookie
     res.cookie("refreshToken", newRefreshToken, {
